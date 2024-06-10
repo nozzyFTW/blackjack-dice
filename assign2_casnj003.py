@@ -2,7 +2,7 @@
 # File: assign2_casnj003.py
 # Author: Noah Casey
 # Email Id: casnj003
-# Description: Assignment 2 - Blackjack
+# Description: Assignment 2 - Blackjack - Dice Edition
 #
 #              DESCRIPTION
 #
@@ -12,7 +12,24 @@
 
 import blackjack
 
+def display_details():
+    """ Displays my details
+
+    Parameters: None
+    Returns: None
+    """
+    print("File\t : casnj003_battle_p2.py")
+    print("Author\t : Noah Casey")
+    print("Stud ID\t : 110443599")
+    print("Email ID : casnj003")
+    print("This is my own work as defined by the\nUniversity's Academic Misconduct Policy.", end="\n\n")
+
 def read_file(filename: str) -> list[list]:
+    """ Reads the player data from saved file
+    
+    Parameters: filename -- the name of the file to open -> type: str
+    Returns: player_list -- list containing each player object (list) -> type: list[list]
+    """
     player_list = []
 
     infile = open(filename, "r")
@@ -44,7 +61,7 @@ def write_to_file(filename: str, player_list: list[list]) -> None:
     outfile = open(filename, "w")
     
     for player in player_list:
-        outfile.write(f"\n{player[0]}\n{player[1]} {player[2]} {player[3]} {player[4]} {player[5]} {player[6]}")
+        outfile.write(f"{player[0]}\n{player[1]} {player[2]} {player[3]} {player[4]} {player[5]} {player[6]}\n")
 
     outfile.close()
 
@@ -104,7 +121,13 @@ def display_highest_chip_holder(player_list: list[list]) -> None:
                 if player[6] > player_list[highest_chip_index][6]:
                     highest_chip = player[5]
                     highest_chip_index = index
-                #elif player[6] ==
+                elif player[6] == player_list[highest_chip_index][6]:
+                    # Win Percentage
+                    player_win_percent = player[2] / player[1]
+                    highest_win_percent = player_list[highest_chip_index][2] / player_list[highest_chip_index][1]
+                    if player_win_percent > highest_win_percent:
+                        highest_chip = player[5]
+                        highest_chip_index = index
         index += 1
     if len(player_list) == 0:
         print("Error: There are no players in player list")
@@ -128,10 +151,12 @@ def remove_player(player_list: list[list], name: str) -> list[list]:
     if player_index == -1:
         print(f"{name} is not found in players.")
     else:
-        del player_list[player_index]
+        updated_list = []
+        for player in player_list:
+            if player[0] != name:
+                updated_list.append(player)
         print(f"Successfully removed {name} from player list.")
-    
-    return player_list
+    return updated_list
 
 def play_blackjack_games(player_list, player_pos):
     player = player_list[player_pos]
@@ -144,9 +169,7 @@ def play_blackjack_games(player_list, player_pos):
         playing = input("Play again [y|n]? ")
         if playing == "y":
             play_blackjack_games(player_list, player_pos)
-        elif playing == "n":
-            pass
-        else:
+        elif playing != "n":
             print("Please enter 'y' or 'n'.")
 
 # sorted [original index, games, chips, score]
@@ -156,27 +179,39 @@ def sort_by_chips(player_list: list[list]) -> list[list]:
     for player in player_list:
         compare_chips(sorted_list, player, index)
         index += 1
-    
     return sorted_list
 
+def insert_item(target_list: list[list], target_index: int, item: any) -> list[list]:
+    index = 0
+    temp_list = []
+    while index < (len(target_list) + 1):
+        if index == target_index:
+            temp_list.append(item)
+        elif index > target_index:
+            temp_list.append(target_list[index - 1])
+        else:
+            temp_list.append(target_list[index])
+        index += 1
+    print(temp_list)
+    return temp_list
 
 
 def compare_chips(sorted_list: list[list], player: list, temp_index: int) -> None:
+    prev_temp = temp_index
     temp_index -= 1
     if len(sorted_list) == 0:
         sorted_list.append(player)
     elif player[5] > sorted_list[temp_index][5]:
         if temp_index == 0:
-            sorted_list.insert(temp_index, player)
+            sorted_list = insert_item(sorted_list, temp_index, player)
         else:
             compare_chips(sorted_list, player, temp_index)
     else:
-        sorted_list.append(player)
+        sorted_list = insert_item(sorted_list, prev_temp, player)
+
+display_details()
 
 player_list = read_file("players.txt")
-
-sorted_list = sort_by_chips(player_list)
-print(sorted_list)
 
 choice = None
 while choice != "quit":
@@ -200,7 +235,7 @@ while choice != "quit":
             player = player_list[player_pos]
             print(f"{name} stats:", end="\n\n")
             print("P  W  L  D  Score")
-            print(f"{player[1]}  {player[2]}  {player[3]}  {player[4]}  {player[6]}", end="\n\n")
+            print(f"{format(player[1], '<2')} {format(player[2], '<2')} {format(player[3], '<2')} {format(player[4], '<2')} {format(player[6], '<2')}", end="\n\n")
             print(f"Chips:  {player[5]}", end="\n\n\n")
 
     elif choice == "high":
@@ -213,7 +248,7 @@ while choice != "quit":
 
     elif choice == "remove":
         name = input("Please enter name: ")
-        remove_player(player_list, name)
+        player_list = remove_player(player_list, name)
 
     elif choice == "play":
         name = input("Please enter name: ")
@@ -221,9 +256,9 @@ while choice != "quit":
         play_blackjack_games(player_list, player_pos)
 
     elif choice == "chips":
-        pass
+        sort_by_chips(player_list)
     elif choice == "quit":
-        write_to_file("players.txt", player_list)
+        write_to_file("new_players.txt", player_list)
         
         # Display outputted data
         for player in player_list:
