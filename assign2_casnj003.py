@@ -33,11 +33,17 @@ def read_file(filename: str) -> list[list]:
     player_list = []
 
     infile = open(filename, "r")
+
+    # Reads all the lines of the text file to a list
     lines = infile.readlines()
 
     temp_player = []
     index = 0
+
+    # Loop through list of lines
     for line in lines:
+        # First line contains the name of the player
+        # and second line contains the player's stats
         if index % 2 == 0:
             # Prevents later issues when displaying player's name
             # (prevents added new lines when not wanted)
@@ -50,7 +56,9 @@ def read_file(filename: str) -> list[list]:
             drawn = int(info_list[3])
             chips = int(info_list[4])
             score = int(info_list[5])
-
+            
+            # Adds player to the player list using the format:
+            # | Player Name | Games Played | Won | Lost | Drawn | Chips | Score |
             temp_player = [name, played, won, lost, drawn, chips, score]
             player_list.append(temp_player)
         index += 1
@@ -68,6 +76,9 @@ def write_to_file(filename: str, player_list: list[list]) -> None:
     """
     outfile = open(filename, "w")
     
+    # Runs through each player and append players to the file using the format:
+    # | Player Name |
+    # | Games Played | Won | Lost | Drawn | Chips | Score |
     for player in player_list:
         outfile.write(f"{player[0]}\n{player[1]} {player[2]} {player[3]} {player[4]} {player[5]} {player[6]}\n")
 
@@ -80,8 +91,10 @@ def display_players(player_list: list[list]):
     print("-                             P  W  L  D   Chips   Score  -")
     print("-----------------------------------------------------------")
 
+    # Displays each player's stats in format:
+    # | Player Name | Games Played | Won | Lost | Drawn | Chips | Score |
+    # |-----------------------------------------------------------------|
     for player in player_list:
-        # Displays the player stats in format: | Player Name | Played | Won | Lost | Drawn | Chips | Score |
         print(f"- {format(player[0], '25s')}  {format(player[1], '2d')} {format(player[2], '2d')} {format(player[3], '2d')} {format(player[4], '2d')}   {format(player[5], '5d')}   {format(player[6], '5d')}  -")
         print("-----------------------------------------------------------")
     print("===========================================================")
@@ -117,9 +130,13 @@ def buy_player_chips(player_list: list[list], name: str) -> None:
     if player_index != -1:
         print(f"{name} currently has {player_list[player_index][5]} chips.")
 
-        request = True
+        request = True      # Changed to False when integer entered is between 1 and 100 and
+                            # ensures that an input is made for requested_chips before continuing
         while request:
             requested_chips = input("How many chips would you like to buy? ")
+
+            # Determines that the entered input can be converted to
+            # an integer before testing if < 1 or > 100
             if not requested_chips.isdigit():
                 print("Please enter an integer between 1-100.")
             else:
@@ -141,33 +158,65 @@ def display_highest_chip_holder(player_list: list[list]) -> None:
     """
     highest_chip_index = -1     # The index of the highest chip holder (-1 to ensure 
                                 # that the index isn't an actual index) -> type: int
-    highest_chip = 0            # Highest amount of chips ()
-    index = 0
+    highest_chip = 0            # Highest amount of chips -> type: int
+    index = 0                   # Used to set the highest_chip_index -> type: int
 
     for player in player_list:
+
+        # Checks if player's chips is higher than current
+        # highest chip holder's.
         if player[5] > highest_chip:
             highest_chip = player[5]
             highest_chip_index = index
+
+        # Else it checks if the player has the same amount
+        # of chips as the highest chip holder.
         elif player[5] == highest_chip:
-            if player[1] < player_list[highest_chip_index][1]:
+
+            # If the player has the same amount of chips, then check if 
+            # games played is less than highest chip holder.
+            if player[1] < player_list[highest_chip_index[0]][1]:
                 highest_chip = player[5]
                 highest_chip_index = index
-            elif player[1] == player_list[highest_chip_index][1]:
-                if player[6] > player_list[highest_chip_index][6]:
+            
+            # Else it checks if the player has the same amount
+            # of games played as the highest chip holder
+            elif player[1] == player_list[highest_chip_index[0]][1]:
+
+                # If the player has the same amount of games played, then check if
+                # the player's score is greater than the highest chip holder's score
+                if player[6] > player_list[highest_chip_index[0]][6]:
                     highest_chip = player[5]
                     highest_chip_index = index
-                elif player[6] == player_list[highest_chip_index][6]:
-                    # Win Percentage
+
+                # Else it checks if the player has the same score as 
+                # the highest chip holder.
+                elif player[6] == player_list[highest_chip_index[0]][6]:
+                    
+                    # If the player has the same score as the highest chip holder,
+                    # then check if the player's win/loss percentage is higher.
                     player_win_percent = player[2] / player[1]
-                    highest_win_percent = player_list[highest_chip_index][2] / player_list[highest_chip_index][1]
+                    highest_win_percent = player_list[highest_chip_index[0]][2] / player_list[highest_chip_index[0]][1]
                     if player_win_percent > highest_win_percent:
                         highest_chip = player[5]
                         highest_chip_index = index
+
+                    # Else, add the index of the player to a list with the highest chip holder
+                    else:
+                        if type(highest_chip_index) == int:
+                            highest_chip_index = [highest_chip_index, index]
+                        else:
+                            highest_chip_index.append(index)
         index += 1
     if len(player_list) == 0:
         print("Error: There are no players in player list")
     elif highest_chip == 0:
         print("Error: Highest chip is 0.")
+    elif type(highest_chip_index) == list:
+        index = 0
+        for player_pos in highest_chip_index:
+            print(f"Highest Chip Holder => {player_list[player_pos][0]} with {highest_chip} chips!")
+            index += 1
     else:
         print(f"Highest Chip Holder => {player_list[highest_chip_index][0]} with {highest_chip} chips!")
 
@@ -276,6 +325,7 @@ while choice != "quit":
             print(f"Chips:  {player[5]}", end="\n")
 
     elif choice == "high":
+        player_list = [['Bruce Wayne', 7, 4, 0, 3, 300, 15], ['Jessica Jones', 12, 0, 6, 6, 10, 6], ['Johnny Rose', 7, 4, 0, 3, 300, 15], ['Gina Linetti', 7, 4, 0, 3, 300, 15], ['Buster Bluth', 3, 0, 2, 1, 50, 1]]
         display_highest_chip_holder(player_list)
 
     elif choice == "add":
