@@ -40,6 +40,7 @@ def read_file(filename: str) -> list[list]:
     for line in lines:
         if index % 2 == 0:
             # Prevents later issues when displaying player's name
+            # (prevents added new lines when not wanted)
             name = line.strip("\n")
         else:
             info_list = line.split()
@@ -58,6 +59,13 @@ def read_file(filename: str) -> list[list]:
     return player_list
 
 def write_to_file(filename: str, player_list: list[list]) -> None:
+    """ Writes player stats to file
+
+    Parameters: filename -- the name of the file to write to -> type: str
+                player_list -- list containing each player object (list) -> type: list[list]
+
+    Returns: None
+    """
     outfile = open(filename, "w")
     
     for player in player_list:
@@ -73,40 +81,67 @@ def display_players(player_list: list[list]):
     print("-----------------------------------------------------------")
 
     for player in player_list:
+        # Displays the player stats in format: | Player Name | Played | Won | Lost | Drawn | Chips | Score |
         print(f"- {format(player[0], '25s')}  {format(player[1], '2d')} {format(player[2], '2d')} {format(player[3], '2d')} {format(player[4], '2d')}   {format(player[5], '5d')}   {format(player[6], '5d')}  -")
         print("-----------------------------------------------------------")
     print("===========================================================")
 
 def find_player(player_list: list[list], name: str) -> int:
+    """ Finds index of player within player list
+
+    Parameters: player_list -- list containing each player object (list) -> type: list[list]
+                name -- inputted player name -> type: str
+
+    Returns: index | -1 -- if player is found, player's location in player list is returned -> type: int
+                        -- if player is not found, return -1
+    """
     index = 0
     for player in player_list:
         if name == player[0]:
+            # return index of player in player_list
             return index
         index += 1
+    # Returns -1 if no player found
     return -1
 
 def buy_player_chips(player_list: list[list], name: str) -> None:
+    """ Allows the player to buy chips
+
+    Parameters: player_list -- list containing each player object (list) -> type: list[list]
+                name -- inputted player name -> type: str
+    
+    Returns: None
+    """
     player_index = find_player(player_list, name)
+    # Checks if player exists based off returned player index
     if player_index != -1:
         print(f"{name} currently has {player_list[player_index][5]} chips.")
 
         request = True
         while request:
-            requested_chips = input("How many chipse would you like to buy? ")
+            requested_chips = input("How many chips would you like to buy? ")
             if not requested_chips.isdigit():
                 print("Please enter an integer between 1-100.")
-            elif requested_chips < 1 or requested_chips > 100:
-                print("You may only buy between 1-100 chips at a time.")
             else:
-                request = False
-                player_list[player_index][5] += requested_chips
-                print(f"Successfully updated {name}'s chip balance to {player_list[player_index][5]}")
+                requested_chips = int(requested_chips)
+                if requested_chips < 1 or requested_chips > 100:
+                    print("You may only buy between 1-100 chips at a time.")
+                else:
+                    request = False
+                    player_list[player_index][5] += requested_chips
+                    print(f"Successfully updated {name}'s chip balance to {player_list[player_index][5]}")
     else:
         print(f"{name} is not found in player list.")
 
 def display_highest_chip_holder(player_list: list[list]) -> None:
-    highest_chip_index = -1
-    highest_chip = 0
+    """ Displays the highest chip holder
+    
+    Parameters: player_list -- list containing each player object (list) -> type: list[list]
+    Returns: None
+    """
+    highest_chip_index = -1     # The index of the highest chip holder (-1 to ensure 
+                                # that the index isn't an actual index) -> type: int
+    highest_chip = 0            # Highest amount of chips ()
     index = 0
 
     for player in player_list:
@@ -150,13 +185,14 @@ def remove_player(player_list: list[list], name: str) -> list[list]:
     player_index = find_player(player_list, name)
     if player_index == -1:
         print(f"{name} is not found in players.")
+
     else:
         updated_list = []
         for player in player_list:
             if player[0] != name:
                 updated_list.append(player)
         print(f"Successfully removed {name} from player list.")
-    return updated_list
+        return updated_list
 
 def play_blackjack_games(player_list, player_pos):
     player = player_list[player_pos]
@@ -165,7 +201,7 @@ def play_blackjack_games(player_list, player_pos):
     player[6], player[5] = blackjack.play_one_game(player[5])      # Returns list [score from game, number of chips]
 
     playing = None
-    while playing != "y" or playing != "n":
+    while playing != "y" and playing != "n":
         playing = input("Play again [y|n]? ")
         if playing == "y":
             play_blackjack_games(player_list, player_pos)
@@ -177,7 +213,7 @@ def sort_by_chips(player_list: list[list]) -> list[list]:
     sorted_list = []
     index = 0
     for player in player_list:
-        compare_chips(sorted_list, player, index)
+        sorted_list = compare_chips(sorted_list, player, index)
         index += 1
     return sorted_list
 
@@ -192,11 +228,10 @@ def insert_item(target_list: list[list], target_index: int, item: any) -> list[l
         else:
             temp_list.append(target_list[index])
         index += 1
-    print(temp_list)
     return temp_list
 
 
-def compare_chips(sorted_list: list[list], player: list, temp_index: int) -> None:
+def compare_chips(sorted_list: list[list], player: list, temp_index: int) -> list[list]:
     prev_temp = temp_index
     temp_index -= 1
     if len(sorted_list) == 0:
@@ -205,9 +240,10 @@ def compare_chips(sorted_list: list[list], player: list, temp_index: int) -> Non
         if temp_index == 0:
             sorted_list = insert_item(sorted_list, temp_index, player)
         else:
-            compare_chips(sorted_list, player, temp_index)
+            sorted_list = compare_chips(sorted_list, player, temp_index)
     else:
         sorted_list = insert_item(sorted_list, prev_temp, player)
+    return sorted_list
 
 display_details()
 
@@ -215,8 +251,9 @@ player_list = read_file("players.txt")
 
 choice = None
 while choice != "quit":
-    print("Please enter choice")
+    print("\nPlease enter choice")
     choice = input("[list, buy, search, high, add, remove, play, chips, quit]: ")
+    print("")
 
     if choice == "list":
         display_players(player_list)
@@ -236,11 +273,10 @@ while choice != "quit":
             print(f"{name} stats:", end="\n\n")
             print("P  W  L  D  Score")
             print(f"{format(player[1], '<2')} {format(player[2], '<2')} {format(player[3], '<2')} {format(player[4], '<2')} {format(player[6], '<2')}", end="\n\n")
-            print(f"Chips:  {player[5]}", end="\n\n\n")
+            print(f"Chips:  {player[5]}", end="\n")
 
     elif choice == "high":
         display_highest_chip_holder(player_list)
-        print("\n")
 
     elif choice == "add":
         name = input("Please enter name: ")
@@ -253,17 +289,23 @@ while choice != "quit":
     elif choice == "play":
         name = input("Please enter name: ")
         player_pos = find_player(player_list, name)
-        play_blackjack_games(player_list, player_pos)
+        
+        if player_pos == -1:
+            print(f"{name} is not found in player list.")
+        else:
+            play_blackjack_games(player_list, player_pos)
 
     elif choice == "chips":
-        sort_by_chips(player_list)
+        sorted_list = sort_by_chips(player_list)
+        display_players(sorted_list)
+
     elif choice == "quit":
         write_to_file("new_players.txt", player_list)
+        print("\n-- Program terminating --", end="\n\n\n")
+        print("NOTE: Your program should output the following information to a file - new_players.txt.", end="\n\n")
         
         # Display outputted data
         for player in player_list:
             print(f"{player[0]}\n{player[1]} {player[2]} {player[3]} {player[4]} {player[5]} {player[6]}")
-
-        print("\n\n-- Program terminating --\n")
     else:
         print("Not a valid command - please try again.")
